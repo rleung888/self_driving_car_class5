@@ -11,7 +11,7 @@ The goals / steps of this project are the following:
 * Optionally, you can also apply a color transform and append binned color features, as well as histograms of color, to your HOG feature vector.  -- COMPLETED
 * Note: for those first two steps don't forget to normalize your features and randomize a selection for training and testing.  -- COMPLETED
 * Implement a sliding-window technique and use your trained classifier to search for vehicles in images.  -- COMPLETED
-* Run your pipeline on a video stream (start with the test_video.mp4 and later implement on full project_video.mp4) and create a heat map of recurring detections frame by frame to reject outliers and follow detected vehicles.  -- COMPLETED
+* Run your pipeline on a video stream (start with the test_video.mp4 and later implement on full project_video.mp4) and create a heat map of recurring detections frame by frame to reject outliers and follow detected vehicles.  -- COMPETED, UPDATED WITH REVIEW COMMENTS (Add multiple windows size, combined heatmap for continuous frames)
 * Estimate a bounding box for vehicles detected.  -- COMPLETED
 
 [//]: # (Image References)
@@ -67,7 +67,7 @@ In the later on process, I found out I get higher score on training with color_s
 ![alt text][image2]
 
 
-####2 . Explain how you settled on your final choice of HOG parameters.
+#### 2 . Explain how you settled on your final choice of HOG parameters.
 
 It is very helpful to train the data with smaller set first to see score and then train all the data.   It tooks about 90s to do feature extraction for 18,000 images.
 
@@ -83,9 +83,9 @@ I splitted the train data and test data by 80% and 20%.   Randomized the data be
 The extraction took 90s but the fitiing only took 3.61 second.   The accurary is 99.38%.    The default parameter from the lesson is about 95% with RGB and single hog channel.  
 
 
-###Sliding Window Search
+### Sliding Window Search
 
-####1. Describe how (and identify where in your code) you implemented a sliding window search.  How did you decide what scales to search and how much to overlap windows?
+#### 1. Describe how (and identify where in your code) you implemented a sliding window search.  How did you decide what scales to search and how much to overlap windows?
 
 I started with no y-start = None, too many false positive.   I put a starting point at 400 and then y-stop at (n * windows_size + y-stop) which is close to 728.   For example, if the windows is 96x96, teh y-stop is 3 * 96 + 400 = 688.   
 
@@ -132,6 +132,13 @@ Here's an example result showing the heatmap from a series of frames of video, t
 
 ### Here are six frames and their corresponding heatmaps:
 
+Based on the first review feedback:
+I added 2 windows size search in different areas:
+    ystart1 = 400, ystop1 = 500, scale1 = 0.8   -- closer to horizon, 64 x 0.8
+    ystart2 = 400, ystop2 = 688, scale2 = 1.5   -- second half, windows size = 64 x 1.5 = 96
+
+    deque length = 5, which add up the heatmap for 5 frames, threshold >= 2 
+
 ![alt text][image5]
 
 ### Here is the output of `scipy.ndimage.measurements.label()` on the integrated heatmap from all six frames:
@@ -144,14 +151,15 @@ Here's an example result showing the heatmap from a series of frames of video, t
 
 ---
 
-###Discussion
+### Discussion
 
-####1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
+#### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
 Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
 
 There are couple issues I have seen
 * The car that is too far away are not detected.   I tried to decrease y start point, it does not help.   I probably have to reduce the windows size to get those smaller car.  However, I did scale down the windows size, it gave more false positive.   I set the threshold = 0, it helps but give more false position in other place.
+-- Resolved by adding multiple car_find and merge heatmap.   
 
 * I detect the car on the opposite lane.  Couple people in the forum said it is a good thing.   It may be useful in some case as long as I can recongize it coming from oppositin direction.   I can see it helpful when I need the info for passing a single lane and avoid head-to-head collision.
 
